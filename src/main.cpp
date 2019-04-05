@@ -26,11 +26,11 @@
 
 #ifdef __WIN32__
 #include <windows.h>
-#define GIT "C:/Program Files/Git/mingw64/bin/git.exe"
 #else
 #include <X11/Xlib.h>
-#define GIT "git"
 #endif//__WIN32__
+
+#define GIT "git"
 
 sp::P<sp::Scene> scene;
 sp::P<sp::Camera> camera;
@@ -78,6 +78,26 @@ public:
         render_data.shader = sp::Shader::get("internal:basic.shader");
         render_data.mesh = sp::MeshData::createDoubleSidedQuad(sp::Vector2f(4.0/3.0, 1));
         render_data.texture = sp::texture_manager.get("loading.png");
+    }
+    
+    virtual void onUpdate(float delta)
+    {
+        if (prev_update_state == state)
+            return;
+        prev_update_state = state;
+        switch(state)
+        {
+        case State::Waiting:
+        case State::Loading:
+            render_data.texture = sp::texture_manager.get("loading.png");
+            break;
+        case State::Ready:
+            render_data.texture = sp::texture_manager.get(name + "/preview.png");
+            break;
+        case State::Error:
+            render_data.texture = sp::texture_manager.get("error.png");
+            break;
+        }
     }
     
     void run()
@@ -169,6 +189,7 @@ public:
         Ready,
         Error
     };
+    State prev_update_state = State::Waiting;
     volatile State state = State::Waiting;
 
     static constexpr float inactivity_timeout = 60 * 5;
@@ -188,9 +209,10 @@ public:
     {
         setRotation(sp::Quaterniond::fromAxisAngle(sp::Vector3d(0,1,0), 15));
 
-        item_count = 0;
         target_rotation = 0.0;
         rotation = 0;
+
+        gui = sp::gui::Loader::load("main.gui", "MAIN");
 
         for(auto& it : sp::io::KeyValueTreeLoader::load("games.txt")->getFlattenNodesByIds())
         {
@@ -215,28 +237,21 @@ public:
     
     virtual void onUpdate(float delta) override
     {
-        float angle_per_item = 360.0 / float(item_count);
+        float angle_per_item = 360.0 / float(games.size());
         if (std::abs(rotation - target_rotation) < angle_per_item / 3.0)
         {
             if (up_key.getDown())
-                target_rotation -= angle_per_item;
-            if (down_key.getDown())
-                target_rotation += angle_per_item;
-            if (go_key.getDown())
             {
-                double item_offset = -target_rotation / angle_per_item;
-                while(item_offset < 0)
-                    item_offset += item_count;
-                int index = item_offset + 0.5;
-                while(index >= item_count)
-                    index -= item_count;
-                for(GameNode* game : games)
-                {
-                    if (index == 0)
-                        game->run();
-                    index--;
-                }
+                target_rotation -= angle_per_item;
+                updateCurrentGame();
             }
+            if (down_key.getDown())
+            {
+                target_rotation += angle_per_item;
+                updateCurrentGame();
+            }
+            if (go_key.getDown())
+                current_game->run();
         }
     }
     
@@ -249,6 +264,7 @@ public:
         games.push_back(game);
         
         update();
+        updateCurrentGame();
         return game;
     }
     
@@ -261,17 +277,18 @@ public:
     }
     
 private:
-    int item_count;
     float rotation;
     float target_rotation;
     
     std::vector<GameNode*> games; //using an std::vector as sp::PList is not thread safe at all, even on a static list.
+    GameNode* current_game = nullptr;
+    
+    sp::P<sp::gui::Widget> gui;
     
     void update()
     {
-        item_count = getChildren().size();
-        float distance = float(item_count) * 1.2f / (2.0f * sp::pi);
-        float angle_per_item = 360.0 / float(item_count);
+        float distance = float(games.size()) * 1.2f / (2.0f * sp::pi);
+        float angle_per_item = 360.0 / float(games.size());
         int index = 0;
         for(auto node : getChildren())
         {
@@ -283,6 +300,29 @@ private:
         
         setPosition(sp::Vector3d(-distance * 0.25, 0, -distance * 0.9 - 2));
     }
+    
+    void updateCurrentGame()
+    {
+        if (current_game)
+            current_game->render_data.order = 0;
+
+        float angle_per_item = 360.0 / float(games.size());
+        double item_offset = -target_rotation / angle_per_item;
+        while(item_offset < 0)
+            item_offset += games.size();
+        int index = item_offset + 0.5;
+        while(index >= int(games.size()))
+            index -= games.size();
+        for(GameNode* game : games)
+        {
+            if (index == 0)
+                current_game = game;
+            index--;
+        }
+        
+        gui->getWidgetWithID("NAME")->setAttribute("caption", current_game->name);
+        current_game->render_data.order = 1;
+    }
 };
 
 
@@ -291,6 +331,7 @@ int main(int argc, char** argv)
     sp::P<sp::Engine> engine = new sp::Engine();
     //Create resource providers, so we can load things.
     new sp::io::DirectoryResourceProvider("resources");
+    new sp::io::DirectoryResourceProvider(".");
     
     //Load our ui theme.
     sp::gui::Theme::loadTheme("default", "gui/theme/basic.theme.txt");
@@ -298,20 +339,19 @@ int main(int argc, char** argv)
     //Create a window to render on, and our engine.
     sp::P<sp::Window> window = new sp::Window(4.0/3.0);
     
+    new sp::gui::Scene(sp::Vector2d(400, 300));
+    
     scene = new sp::Scene("MAIN");
     camera = new sp::Camera(scene->getRoot());
     camera->setPerspective();
     camera->setPosition(sp::Vector3d(0, 0, 0));
+    scene->setDefaultCamera(camera);
 
     Spinner* spinner_node = new Spinner(scene->getRoot());
     
-    {
-        new sp::gui::Scene(sp::Vector2d(1280, 800));
-
-        scene_layer = new sp::SceneGraphicsLayer(10);
-        scene_layer->addRenderPass(new sp::BasicNodeRenderPass(camera));
-        window->addLayer(scene_layer);
-    }
+    scene_layer = new sp::SceneGraphicsLayer(1);
+    scene_layer->addRenderPass(new sp::BasicNodeRenderPass());
+    window->addLayer(scene_layer);
     
     std::thread async_load([spinner_node]()
     {
