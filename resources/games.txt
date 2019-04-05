@@ -1,0 +1,30 @@
+{
+    {
+        depends: SeriousProton https://github.com/daid/SeriousProton.git
+        build: \
+            cmake .. -DSERIOUS_PROTON_DIR=../SeriousProton \
+            make -j 3
+
+        [iMvaders] {
+            git: https://github.com/NotNallath/iMvaders.git
+            exec: iMvaders
+        }
+    }
+
+    {
+        build: \
+            cmake .. \
+            make -j 3
+        depends: SeriousProton2 https://github.com/daid/SeriousProton2.git
+        
+        [Mario] {
+            git: https://github.com/daid/Mario.git
+            exec: Mario
+        }
+    
+        [Geronimo] {
+            git: https://github.com/daid/Geronimo.git
+            exec: Geronimo
+        }
+    }
+}
