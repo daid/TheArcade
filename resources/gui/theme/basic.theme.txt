@@ -1,8 +1,12 @@
 {
     color: #FFFFFF
-    font: gui/theme/KenVector Bold.ttf
-    size: 30
+    font: gui/theme/sansation.ttf
+    size: 8
     [label] {
+        [label.title] {
+            size: 30
+            font: gui/theme/KenVector Bold.ttf
+        }
     }
     [progressbar] {
         image: gui/theme/pixel.png

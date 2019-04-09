@@ -336,7 +336,7 @@ private:
         }
         
         gui->getWidgetWithID("NAME")->setAttribute("caption", current_game->name);
-        gui->getWidgetWithID("INFO")->setAttribute("caption", "");
+        gui->getWidgetWithID("INFO")->setAttribute("caption", current_game->git);
         current_game->render_data.order = 1;
     }
 };

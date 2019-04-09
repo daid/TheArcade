@@ -5,6 +5,7 @@
         type: label
         alignment: top
         size: 100, 100
+        theme_data: label.title
     }
 
     [INFO] {
@@ -12,7 +13,6 @@
         alignment: bottomleft
         size: 100, 100
         margin: 20
-        text.size: 8
         text.alignment: bottomleft
     }
 }
