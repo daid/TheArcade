@@ -31,6 +31,7 @@
 #endif//__WIN32__
 
 #include "performanceTest.h"
+#include "cameraCaptureTexture.h"
 
 #define GIT "git"
 
@@ -43,6 +44,10 @@ sp::io::Keybinding down_key("DOWN", "down");
 sp::io::Keybinding go_key("GO", "space");
 
 sp::io::Keybinding secret_key("SECRET", "1");
+sp::io::Keybinding camera_key("CAMERA", "2");
+
+CameraCaptureTexture* camera_capture_texture;
+sp::P<sp::Node> camera_display_node;
 
 
 bool isAnyKeyPressed()
@@ -266,6 +271,29 @@ public:
                     gui->getWidgetWithID("INFO")->setAttribute("caption", result);
                 };
                 getScene()->disable();
+            }
+            
+            if (camera_key.getDown())
+            {
+                if (camera_display_node)
+                {
+                    camera_display_node.destroy();
+                    camera_capture_texture->close();
+                }
+                else
+                {
+                    if (!camera_capture_texture)
+                        camera_capture_texture = new CameraCaptureTexture();
+                    camera_capture_texture->open(0);
+                    
+                    camera_display_node = new sp::Node(getParent());
+                    camera_display_node->setPosition(sp::Vector3d(1, 0, -2));
+                    camera_display_node->setRotation(90);
+                    camera_display_node->render_data.type = sp::RenderData::Type::Normal;
+                    camera_display_node->render_data.shader = sp::Shader::get("internal:basic.shader");
+                    camera_display_node->render_data.mesh = sp::MeshData::createDoubleSidedQuad(sp::Vector2f(4.0/3.0, 1));
+                    camera_display_node->render_data.texture = camera_capture_texture;
+                }
             }
         }
     }
