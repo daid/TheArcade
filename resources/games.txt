@@ -2,7 +2,7 @@
     {
         depends: SeriousProton https://github.com/daid/SeriousProton.git
         build: \
-            cmake .. -DSERIOUS_PROTON_DIR=../SeriousProton \
+            cmake .. -DSERIOUS_PROTON_DIR=../SeriousProton/ \
             make -j 3
 
         [iMvaders] {

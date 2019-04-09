@@ -354,6 +354,10 @@ int main(int argc, char** argv)
     
     //Create a window to render on, and our engine.
     sp::P<sp::Window> window = new sp::Window(4.0/3.0);
+#ifndef DEBUG
+    window->setFullScreen(true);
+    window->hideCursor();
+#endif
     
     new sp::gui::Scene(sp::Vector2d(400, 300));
     
