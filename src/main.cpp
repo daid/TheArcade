@@ -30,6 +30,8 @@
 #include <X11/Xlib.h>
 #endif//__WIN32__
 
+#include "performanceTest.h"
+
 #define GIT "git"
 
 sp::P<sp::Scene> scene;
@@ -39,6 +41,9 @@ sp::P<sp::SceneGraphicsLayer> scene_layer;
 sp::io::Keybinding up_key("UP", "up");
 sp::io::Keybinding down_key("DOWN", "down");
 sp::io::Keybinding go_key("GO", "space");
+
+sp::io::Keybinding secret_key("SECRET", "1");
+
 
 bool isAnyKeyPressed()
 {
@@ -252,6 +257,16 @@ public:
             }
             if (go_key.getDown())
                 current_game->run();
+            if (secret_key.getDown())
+            {
+                gui->getWidgetWithID("NAME")->setAttribute("caption", "TEST...");
+                sp::Scene::get("performance_test")->enable();
+                (sp::P<PerformanceTestScene>(sp::Scene::get("performance_test")))->finish_function = [this](sp::string result)
+                {
+                    gui->getWidgetWithID("INFO")->setAttribute("caption", result);
+                };
+                getScene()->disable();
+            }
         }
     }
     
@@ -321,6 +336,7 @@ private:
         }
         
         gui->getWidgetWithID("NAME")->setAttribute("caption", current_game->name);
+        gui->getWidgetWithID("INFO")->setAttribute("caption", "");
         current_game->render_data.order = 1;
     }
 };
@@ -358,6 +374,8 @@ int main(int argc, char** argv)
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         spinner_node->doASyncLoad();
     });
+    
+    new PerformanceTestScene();
     
     engine->run();
 
