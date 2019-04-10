@@ -59,7 +59,7 @@ void PerformanceTestScene::onUpdate(float delta)
             {
                 LOG(Info, it.first, it.second);
             }
-            if (result_data.size() >= 30 || ((state == State::Gravity || state == State::GravityRender) && result_data.size() >= 10))
+            if (result_data.size() >= 30 || ((state == State::Gravity || state == State::GravityRender) && result_data.size() >= 10) || node_create_step_count == 1)
             {
                 switch(state)
                 {
