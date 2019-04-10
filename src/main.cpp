@@ -125,6 +125,11 @@ public:
                 timeout = inactivity_timeout;
             else
                 timeout -= 0.1;
+            if (timeout <= 0)
+            {
+                timeout = inactivity_timeout;
+                process.kill();
+            }
         }
     }
 
