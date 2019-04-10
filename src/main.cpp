@@ -300,7 +300,7 @@ public:
                     
                     camera_display_node = new sp::Node(getParent());
                     camera_display_node->setPosition(sp::Vector3d(1, 0, -2));
-                    camera_display_node->setRotation(90);
+                    camera_display_node->setRotation(-90);
                     camera_display_node->render_data.type = sp::RenderData::Type::Normal;
                     camera_display_node->render_data.shader = sp::Shader::get("internal:basic.shader");
                     camera_display_node->render_data.mesh = sp::MeshData::createDoubleSidedQuad(sp::Vector2f(4.0/3.0, 1));
