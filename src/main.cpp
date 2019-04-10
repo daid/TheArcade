@@ -261,7 +261,14 @@ public:
                 updateCurrentGame();
             }
             if (go_key.getDown())
+            {
+                if (camera_display_node)
+                {
+                    camera_display_node.destroy();
+                    camera_capture_texture->close();
+                }
                 current_game->run();
+            }
             if (secret_key.getDown())
             {
                 gui->getWidgetWithID("NAME")->setAttribute("caption", "TEST...");
