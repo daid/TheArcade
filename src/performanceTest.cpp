@@ -59,21 +59,23 @@ void PerformanceTestScene::onUpdate(float delta)
             {
                 LOG(Info, it.first, it.second);
             }
-            if (result_data.size() >= 30 || (state == State::Gravity && result_data.size() >= 15))
+            if (result_data.size() >= 30 || ((state == State::Gravity || state == State::GravityRender) && result_data.size() >= 10))
             {
                 switch(state)
                 {
-                case State::NoRender:   result_text += "NoRender    "; break;
-                case State::RenderOnly: result_text += "RenderOnly  "; break;
-                case State::Collision:  result_text += "Collision   "; break;
-                case State::Gravity:    result_text += "Gravity     "; break;
+                case State::NoRender:           result_text += "NoRender        "; break;
+                case State::Render:             result_text += "Render          "; break;
+                case State::Collision:          result_text += "Collision       "; break;
+                case State::CollisionRender:    result_text += "CollisionRender "; break;
+                case State::Gravity:            result_text += "Gravity         "; break;
+                case State::GravityRender:      result_text += "GravityRender   "; break;
                 case State::Finished: break;
                 }
                 result_text += sp::string(good_fps_node_count) + " " + sp::string(result_data.back().first);
                 result_text += "\n";
-                
+
                 state = State(int(state) + 1);
-                
+
                 if (state == State::Finished)
                 {
                     disable();
@@ -81,6 +83,12 @@ void PerformanceTestScene::onUpdate(float delta)
                     LOG(Info, result_text);
                     if (finish_function)
                         finish_function(result_text);
+                    FILE* f = fopen("/tmp/performance.test", "wt");
+                    if (f)
+                    {
+                        fwrite(result_text.c_str(), result_text.length(), 1, f);
+                        fclose(f);
+                    }
                     return;
                 }
                 
@@ -103,14 +111,14 @@ void PerformanceTestScene::onUpdate(float delta)
             for(int n=0; n<node_create_step_count; n++)
                 createNode();
         }
-        if (state == State::Gravity)
-            measure_delay = 1.5;
+        if (state == State::Gravity || state == State::GravityRender)
+            measure_delay = 2.0;
     }
 }
     
 void PerformanceTestScene::onFixedUpdate()
 {
-    if (state == State::Gravity)
+    if (state == State::Gravity || state == State::GravityRender)
     {
         for(sp::Node* node : getRoot()->getChildren())
         {
@@ -128,7 +136,7 @@ void PerformanceTestScene::onEnable()
 void PerformanceTestScene::createNode()
 {
     sp::Node* node = new sp::Node(getRoot());
-    if (state != State::NoRender)
+    if (state == State::Render || state == State::CollisionRender || state == State::GravityRender)
     {
         node->render_data.type = sp::RenderData::Type::Normal;
         node->render_data.shader = sp::Shader::get("internal:basic.shader");
@@ -136,7 +144,7 @@ void PerformanceTestScene::createNode()
         node->render_data.texture = sp::texture_manager.get("gui/theme/pixel.png");
     }
     node->setPosition(sp::Vector2d(sp::random(-100, 100), sp::random(-100, 100)));
-    if (state == State::Collision || state == State::Gravity)
+    if (state == State::Collision || state == State::CollisionRender || state == State::Gravity || state == State::GravityRender)
         node->setCollisionShape(sp::collision::Circle2D(1.0));
     node_count++;
 }

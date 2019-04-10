@@ -22,9 +22,11 @@ private:
     enum class State
     {
         NoRender,
-        RenderOnly,
+        Render,
         Collision,
+        CollisionRender,
         Gravity,
+        GravityRender,
         Finished
     } state;
     
