@@ -122,7 +122,7 @@ void PerformanceTestScene::onFixedUpdate()
     {
         for(sp::Node* node : getRoot()->getChildren())
         {
-            node->setLinearVelocity(-node->getPosition2D());
+            node->setLinearVelocity(node->getLinearVelocity2D() - node->getPosition2D() * 0.1);
         }
     }
 }
@@ -144,8 +144,13 @@ void PerformanceTestScene::createNode()
         node->render_data.texture = sp::texture_manager.get("gui/theme/pixel.png");
     }
     node->setPosition(sp::Vector2d(sp::random(-100, 100), sp::random(-100, 100)));
+    node->setRotation(sp::random(0, 360));
     if (state == State::Collision || state == State::CollisionRender || state == State::Gravity || state == State::GravityRender)
+    {
         node->setCollisionShape(sp::collision::Circle2D(1.0));
+        if (state == State::Gravity || state == State::GravityRender)
+            node->setLinearVelocity(-node->getPosition2D());
+    }
     node_count++;
 }
 
