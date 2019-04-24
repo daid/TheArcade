@@ -105,7 +105,7 @@ public:
             if (timeout <= 0 || isExitKeyPressed())
             {
                 timeout = inactivity_timeout;
-                process.kill();
+                process.kill(true);
             }
         }
     }
