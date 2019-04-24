@@ -43,6 +43,8 @@ sp::io::Keybinding up_key("UP", "up");
 sp::io::Keybinding down_key("DOWN", "down");
 sp::io::Keybinding go_key("GO", "space");
 
+sp::io::Keybinding switch_beta_key("SWITCH_BETA", "b");
+
 sp::io::Keybinding secret_key("SECRET", "1");
 sp::io::Keybinding camera_key("CAMERA", "2");
 
@@ -70,6 +72,21 @@ bool isAnyKeyPressed()
     return false;
 }
 
+bool isExitKeyPressed()
+{
+#ifdef __WIN32__
+    uint8_t keys[256];
+    GetKeyboardState(keys);
+    return keys[51];
+#else
+    Display* display = XOpenDisplay(nullptr);
+    char keys[32];
+    XQueryKeymap(display, keys);
+    XCloseDisplay(display);
+    return keys[51 / 8] & (1 << (51 % 8));
+#endif
+}
+
 bool isDirectory(sp::string directory)
 {
     struct stat s;
@@ -84,7 +101,7 @@ public:
     GameNode(sp::P<sp::Node> parent, sp::string name)
     : sp::Node(parent), name(name)
     {
-        render_data.type = sp::RenderData::Type::Normal;
+        render_data.type = sp::RenderData::Type::None;
         render_data.shader = sp::Shader::get("internal:basic.shader");
         render_data.mesh = sp::MeshData::createDoubleSidedQuad(sp::Vector2f(4.0/3.0, 1));
         render_data.texture = sp::texture_manager.get("loading.png");
@@ -125,7 +142,7 @@ public:
                 timeout = inactivity_timeout;
             else
                 timeout -= 0.1;
-            if (timeout <= 0)
+            if (timeout <= 0 || isExitKeyPressed())
             {
                 timeout = inactivity_timeout;
                 process.kill();
@@ -219,17 +236,15 @@ public:
 class Spinner : public sp::Node
 {
 public:
-    Spinner(sp::P<Node> parent)
-    : sp::Node(parent)
+    Spinner(sp::P<Node> parent, sp::P<sp::gui::Widget> gui, sp::string resource_name)
+    : sp::Node(parent), gui(gui)
     {
         setRotation(sp::Quaterniond::fromAxisAngle(sp::Vector3d(0,1,0), 15));
 
         target_rotation = 0.0;
         rotation = 0;
 
-        gui = sp::gui::Loader::load("main.gui", "MAIN");
-
-        for(auto& it : sp::io::KeyValueTreeLoader::load("games.txt")->getFlattenNodesByIds())
+        for(auto& it : sp::io::KeyValueTreeLoader::load(resource_name)->getFlattenNodesByIds())
         {
             sp::P<GameNode> game = add(it.first);
             game->exec = it.second["exec"];
@@ -243,15 +258,36 @@ public:
             game->build_commands = it.second["build"].split("\n");
         }
     }
+    
+    void setActive(bool a)
+    {
+        active = a;
+        for(auto game_node : games)
+        {
+            if (active)
+                game_node->render_data.type = sp::RenderData::Type::Normal;
+            else
+                game_node->render_data.type = sp::RenderData::Type::None;
+        }
+        if (active)
+            updateCurrentGame();
+    }
+    
+    bool isActive()
+    {
+        return active;
+    }
 
     virtual void onFixedUpdate() override
     {
+        if (!active) return;
         rotation = rotation * 0.9 + target_rotation * 0.1;
         setRotation(sp::Quaterniond::fromAxisAngle(sp::Vector3d(0,1,0), 15) * sp::Quaterniond::fromAxisAngle(sp::Vector3d(1,0,0), rotation));
     }
     
     virtual void onUpdate(float delta) override
     {
+        if (!active) return;
         float angle_per_item = 360.0 / float(games.size());
         if (std::abs(rotation - target_rotation) < angle_per_item / 3.0)
         {
@@ -332,6 +368,8 @@ public:
     }
     
 private:
+    bool active = false;
+    
     float rotation;
     float target_rotation;
     
@@ -381,6 +419,44 @@ private:
     }
 };
 
+class BetaSwitcher : public sp::Node
+{
+public:
+    BetaSwitcher(sp::P<sp::Node> parent, sp::P<Spinner> normal, sp::P<Spinner> beta)
+    : sp::Node(parent), normal(normal), beta(beta)
+    {
+    }
+
+    virtual void onFixedUpdate()
+    {
+        if (timeout > 0)
+        {
+            timeout--;
+            if (!timeout)
+                switchActive();
+        }
+        if (switch_beta_key.getDown())
+        {
+            switchActive();
+        }
+    }
+    
+    void switchActive()
+    {
+        bool normal_active = !normal->isActive();
+        normal->setActive(normal_active);
+        beta->setActive(!normal_active);
+        timeout = 0;
+        if (!normal_active)
+            timeout = 60 * 60 * 5;
+    }
+    
+private:
+    int timeout;
+    sp::P<Spinner> normal;
+    sp::P<Spinner> beta;
+};
+
 
 int main(int argc, char** argv)
 {
@@ -407,16 +483,21 @@ int main(int argc, char** argv)
     camera->setPosition(sp::Vector3d(0, 0, 0));
     scene->setDefaultCamera(camera);
 
-    Spinner* spinner_node = new Spinner(scene->getRoot());
+    sp::P<sp::gui::Widget> gui = sp::gui::Loader::load("main.gui", "MAIN");
+    Spinner* spinner_node = new Spinner(scene->getRoot(), gui, "games.txt");
+    Spinner* spinner_node_beta = new Spinner(scene->getRoot(), gui, "beta_games.txt");
+    new BetaSwitcher(scene->getRoot(), spinner_node, spinner_node_beta);
+    spinner_node->setActive(true);
     
     scene_layer = new sp::SceneGraphicsLayer(1);
     scene_layer->addRenderPass(new sp::BasicNodeRenderPass());
     window->addLayer(scene_layer);
     
-    std::thread async_load([spinner_node]()
+    std::thread async_load([spinner_node, spinner_node_beta]()
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         spinner_node->doASyncLoad();
+        spinner_node_beta->doASyncLoad();
     });
     
     new PerformanceTestScene();

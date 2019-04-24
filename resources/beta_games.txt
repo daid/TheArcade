@@ -1,0 +1,13 @@
+{
+    {
+        build: \
+            cmake .. \
+            make -j 3
+        depends: SeriousProton2 https://github.com/daid/SeriousProton2.git
+        
+        [Tonks] {
+            git: https://github.com/daid/Tonks.git
+            exec: Tonks
+        }
+    }
+}
