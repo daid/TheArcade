@@ -21,8 +21,7 @@
 #include <sp2/scene/camera.h>
 #include <sp2/collision/2d/box.h>
 #include <sp2/collision/2d/circle.h>
-
-#include <sys/stat.h>
+#include <sp2/io/filesystem.h>
 
 #include "unfocusedKeyInfo.h"
 #include "performanceTest.h"
@@ -46,14 +45,6 @@ sp::io::Keybinding camera_key("CAMERA", "2");
 CameraCaptureTexture* camera_capture_texture;
 sp::P<sp::Node> camera_display_node;
 
-
-bool isDirectory(sp::string directory)
-{
-    struct stat s;
-    if (stat(directory.c_str(), &s))
-        return false;
-    return S_ISDIR(s.st_mode);
-}
 
 class GameNode : public sp::Node
 {
@@ -126,11 +117,7 @@ public:
         if (!updateGit(git, name))
             return;
         sp::string build_path = name + "/_build";
-#ifdef __WIN32__
-        mkdir(build_path.c_str());
-#else
-        mkdir(build_path.c_str(), 0777);
-#endif
+        sp::io::makeDirectory(build_path);
         for(sp::string command : build_commands)
         {
             LOG(Info, name, ": Running build command:", command, "at", build_path);
@@ -149,7 +136,7 @@ public:
     
     bool updateGit(sp::string repo, sp::string target)
     {
-        if (!isDirectory(target))
+        if (!sp::io::isDirectory(target))
         {
             LOG(Info, name, ": Running git clone for", target);
             sp::io::Subprocess git_process({GIT, "clone", repo, target});
