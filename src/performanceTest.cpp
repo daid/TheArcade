@@ -120,7 +120,7 @@ void PerformanceTestScene::onFixedUpdate()
 {
     if (state == State::Gravity || state == State::GravityRender)
     {
-        for(sp::Node* node : getRoot()->getChildren())
+        for(sp::P<sp::Node> node : getRoot()->getChildren())
         {
             node->setLinearVelocity(node->getLinearVelocity2D() - node->getPosition2D() * 0.1);
         }
@@ -156,11 +156,11 @@ void PerformanceTestScene::createNode()
 
 void PerformanceTestScene::eraseNodes()
 {
-    for(sp::Node* node : getRoot()->getChildren())
+    for(sp::P<sp::Node> node : getRoot()->getChildren())
     {
         sp::P<sp::Camera> camera = sp::P<sp::Node>(node);
         if (camera)
             continue;
-        delete node;
+        node.destroy();
     }
 }
