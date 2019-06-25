@@ -13,5 +13,9 @@
             git: https://github.com/daid/iMvaders2.git
             exec: iMvaders2
         }
+        [BitAndNibbly] {
+            git: https://github.com/daid/BitAndNibbly.git
+            exec: BitAndNibbly
+        }
     }
 }
