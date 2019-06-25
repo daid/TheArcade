@@ -257,8 +257,14 @@ public:
                 }
                 current_game->run();
             }
-            if (secret_key.getDown())
+            if (camera_key.get() && secret_key.getDown())
             {
+                if (camera_display_node)
+                {
+                    camera_display_node.destroy();
+                    camera_capture_texture->close();
+                }
+
                 gui->getWidgetWithID("NAME")->setAttribute("caption", "TEST...");
                 sp::Scene::get("performance_test")->enable();
                 (sp::P<PerformanceTestScene>(sp::Scene::get("performance_test")))->finish_function = [this](sp::string result)
