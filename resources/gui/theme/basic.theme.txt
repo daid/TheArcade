@@ -7,6 +7,10 @@
             size: 30
             font: gui/theme/KenVector Bold.ttf
         }
+        [label.beta] {
+            size: 10
+            font: gui/theme/KenVector Bold.ttf
+        }
     }
     [progressbar] {
         image: gui/theme/pixel.png

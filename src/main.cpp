@@ -375,8 +375,8 @@ private:
 class BetaSwitcher : public sp::Node
 {
 public:
-    BetaSwitcher(sp::P<sp::Node> parent, sp::P<Spinner> normal, sp::P<Spinner> beta)
-    : sp::Node(parent), normal(normal), beta(beta)
+    BetaSwitcher(sp::P<sp::Node> parent, sp::P<Spinner> normal, sp::P<Spinner> beta, sp::P<sp::gui::Widget> gui)
+    : sp::Node(parent), normal(normal), beta(beta), gui(gui)
     {
     }
 
@@ -402,12 +402,14 @@ public:
         timeout = 0;
         if (!normal_active)
             timeout = 60 * 60 * 5;
+        gui->getWidgetWithID("BETA")->setVisible(!normal_active);
     }
     
 private:
     int timeout;
     sp::P<Spinner> normal;
     sp::P<Spinner> beta;
+    sp::P<sp::gui::Widget> gui;
 };
 
 
@@ -439,7 +441,7 @@ int main(int argc, char** argv)
     sp::P<sp::gui::Widget> gui = sp::gui::Loader::load("main.gui", "MAIN");
     Spinner* spinner_node = new Spinner(scene->getRoot(), gui, "games.txt");
     Spinner* spinner_node_beta = new Spinner(scene->getRoot(), gui, "beta_games.txt");
-    new BetaSwitcher(scene->getRoot(), spinner_node, spinner_node_beta);
+    new BetaSwitcher(scene->getRoot(), spinner_node, spinner_node_beta, gui);
     spinner_node->setActive(true);
     
     scene_layer = new sp::SceneGraphicsLayer(1);

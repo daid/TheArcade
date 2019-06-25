@@ -8,6 +8,15 @@
         theme_data: label.title
     }
 
+    [BETA] {
+        type: label
+        alignment: topleft
+        size: 100, 30
+        theme_data: label.beta
+        caption: BETA
+        visible: false
+    }
+
     [INFO] {
         type: label
         alignment: bottomleft
