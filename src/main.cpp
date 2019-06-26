@@ -35,6 +35,8 @@ sp::P<sp::SceneGraphicsLayer> scene_layer;
 
 sp::io::Keybinding up_key("UP", "up");
 sp::io::Keybinding down_key("DOWN", "down");
+sp::io::Keybinding left_key("LEFT", "left");
+sp::io::Keybinding right_key("RIGHT", "right");
 sp::io::Keybinding go_key("GO", "space");
 
 sp::io::Keybinding switch_beta_key("SWITCH_BETA", "b");
@@ -389,9 +391,11 @@ public:
                 switchActive();
         }
         if (switch_beta_key.getDown())
-        {
             switchActive();
-        }
+        if (left_key.getDown() && !normal->isActive())
+            switchActive();
+        if (right_key.getDown() && normal->isActive())
+            switchActive();
     }
     
     void switchActive()
