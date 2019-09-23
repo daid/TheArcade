@@ -60,7 +60,7 @@ public:
         render_data.texture = sp::texture_manager.get("loading.png");
     }
     
-    virtual void onUpdate(float delta)
+    virtual void onUpdate(float delta) override
     {
         if (prev_update_state == state)
             return;
@@ -382,7 +382,7 @@ public:
     {
     }
 
-    virtual void onFixedUpdate()
+    virtual void onFixedUpdate() override
     {
         if (timeout > 0)
         {
