@@ -11,7 +11,7 @@ bool CameraCaptureTexture::open(int camera_index)
     close();
     
     capture = new sp::io::CameraCapture(camera_index);
-    if (!capture->isOpen())
+    if (capture->getState() != sp::io::CameraCapture::State::Streaming)
     {
         close();
         return false;
