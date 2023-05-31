@@ -193,7 +193,7 @@ public:
         target_rotation = 0.0;
         rotation = 0;
 
-        for(auto& it : sp::io::KeyValueTreeLoader::load(resource_name)->getFlattenNodesByIds())
+        for(auto& it : sp::io::KeyValueTreeLoader::loadResource(resource_name)->getFlattenNodesByIds())
         {
             sp::P<GameNode> game = add(it.first);
             game->exec = it.second["exec"];
