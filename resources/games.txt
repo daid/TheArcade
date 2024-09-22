@@ -6,7 +6,7 @@
             make -j 3
 
         [iMvaders] {
-            git: https://github.com/NotNallath/iMvaders.git
+            git: https://github.com/daid/iMvaders.git
             exec: iMvaders
         }
     }
@@ -25,6 +25,16 @@
         [Geronimo] {
             git: https://github.com/daid/Geronimo.git
             exec: Geronimo
+        }
+
+        [RogDox] {
+            git: https://github.com/daid/RogDox.git
+            exec: RogDox
+        }
+
+        [OnlyDown] {
+            git: https://github.com/daid/OnlyDown.git
+            exec: OnlyDown
         }
     }
 }

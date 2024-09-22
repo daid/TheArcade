@@ -29,6 +29,7 @@
 
 #define GIT "git"
 
+sp::P<sp::Window> window;
 sp::P<sp::Scene> scene;
 sp::P<sp::Camera> camera;
 sp::P<sp::SceneGraphicsLayer> scene_layer;
@@ -85,6 +86,9 @@ public:
         if (state != State::Ready)
             return;
         LOG(Info, "Running:", exec, "@", name);
+#ifndef DEBUG
+        window->setFullScreen(false);
+#endif
 
         sp::io::Subprocess process({"_build/" + exec}, name);
         float timeout = inactivity_timeout;
@@ -101,6 +105,9 @@ public:
                 process.kill(true);
             }
         }
+#ifndef DEBUG
+        window->setFullScreen(true);
+#endif
     }
 
     void doASyncLoad()
@@ -428,7 +435,7 @@ int main(int argc, char** argv)
     sp::gui::Theme::loadTheme("default", "gui/theme/basic.theme.txt");
     
     //Create a window to render on, and our engine.
-    sp::P<sp::Window> window = new sp::Window(4.0/3.0);
+    window = new sp::Window(4.0/3.0);
 #ifndef DEBUG
     window->setFullScreen(true);
     window->hideCursor();
