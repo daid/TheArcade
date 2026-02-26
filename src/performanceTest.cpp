@@ -127,7 +127,7 @@ void PerformanceTestScene::onFixedUpdate()
     }
 }
 
-void PerformanceTestScene::onEnable()
+void PerformanceTestScene::onEnable(uint32_t flags)
 {
     state = State::NoRender;
     result_text = "";

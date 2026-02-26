@@ -11,7 +11,7 @@ public:
 
     virtual void onUpdate(float delta) override;
     virtual void onFixedUpdate() override;
-    virtual void onEnable() override;
+    virtual void onEnable(uint32_t flags) override;
     
     std::function<void(sp::string)> finish_function;
 private:
